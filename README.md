@@ -1,45 +1,64 @@
-Calis_Store with Ai Design (FIX)
+# Calis_Store
 
-Alur, Fitur, Password DLL :
+**Calis_Store** adalah aplikasi CRUD berbasis PHP & MySQL untuk mengelola toko online alat-alat calisthenics. Aplikasi ini memiliki sistem login multi-role: **admin**, **member**, dan **user biasa**, dengan fitur dan tampilan yang berbeda-beda.
 
-Fitur-Fitur Lainnya yang Tersedia:
-1.	Pengelolaan Produk oleh Admin:
-o	Tambah, Edit, dan Hapus Produk: Admin dapat menambah, mengedit, dan menghapus produk dalam database.
-o	Kelola Gambar Produk: Admin dapat mengunggah gambar produk saat menambah atau mengedit produk.
-2.	Pengelolaan Pengguna:
-o	Admin dapat mengelola akun pengguna, termasuk memverifikasi, menghapus, atau memperbarui informasi pengguna.
-3.	Pengelolaan Stok:
-o	Admin dapat memperbarui jumlah stok produk yang tersedia di sistem.
-4.	Pembelian Produk oleh User:
-o	Pengguna dapat membeli produk yang tersedia dengan harga yang lebih murah jika mereka adalah member, berkat diskon yang diterima.
-o	Pengguna juga bisa membeli berapa produknya
-5.	Riwayat Pembelian User dan Member
-o	Pengguna dan member dapat melihat Riwayat Pembelian barang yang telah mereka beli
-6.	Keamanan Data Pengguna:
-o	Setiap data pengguna, produk, dan transaksi dijaga keamanannya untuk mencegah potensi akses tidak sah dan serangan.
+---
 
+## 🗂️ Struktur File
 
+- `admin_dashboard.php` – CRUD produk untuk admin.
+- `admin_purchases.php` – Tambah produk oleh admin.
+- `edit_product.php` – Edit produk.
+- `member_dashboard.php` – Tampilan produk khusus member dengan diskon.
+- `user_dashboard.php` – Tampilan produk untuk user biasa.
+- `purchase.php` – Proses beli oleh user biasa.
+- `purchase2.php` – Proses beli oleh member.
+- `history.php` – Menampilkan riwayat pembelian.
+- `login.php` – Halaman login semua user.
+- `logout.php` – Logout dan destroy session.
+- `ceklogin.php` – Proses autentikasi login.
+- `koneksi.php` – Konfigurasi koneksi database.
 
-________________________________________
-Alur Pengguna (User Flow):
-1.	Login: Pengguna, member atau admin akan masuk ke sistem menggunakan username dan password yang sudah disediakan.
+---
 
-Untuk Admin:
-o	Username: admin1
-o	Password: 123
-Untuk Member:
-o	Username: member2
-o	Password: 234
-Untuk User:
-o	Username: user3
-o	Password: 345
+## 💾 Struktur Database SQL
 
-2.	Dashboard:
-o	Setelah login, pengguna akan diarahkan ke dashboard mereka.
-o	Pengguna biasa akan melihat produk biasa sedangkan untuk member ada diskon khusus 10%, dan admin akan memiliki akses untuk mengelola produk.
+Kamu bisa langsung salin semua query ini ke phpMyAdmin atau terminal SQL:
 
-3.	Melihat Produk dan Pembelian: 
-Pengguna dapat melihat produk yang tersedia dan membeli produk jika produk tersebut tersedia dalam stok.
+```sql
+-- Buat database terlebih dahulu
+CREATE DATABASE calisthenics_store;
+USE calisthenics_store;
 
-4.	Logout:
-Pengguna atau admin dapat keluar dari sistem dengan mengklik tombol logout, yang akan menghancurkan sesi mereka dan mengarahkan mereka kembali ke halaman login.
+-- Tabel users
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('admin', 'member', 'user') NOT NULL
+);
+
+-- Tabel products
+CREATE TABLE products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    price INT NOT NULL,
+    stock INT NOT NULL
+);
+
+-- Tabel transactions
+CREATE TABLE transactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT DEFAULT 1,
+    purchase_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+ -- Masukkan data user
+ INSERT INTO users (username, password, role) VALUES 
+('admin1', MD5('admin123'), 'admin'),
+('member1', MD5('member123'), 'member'),
+('user1', MD5('user123'), 'user');
