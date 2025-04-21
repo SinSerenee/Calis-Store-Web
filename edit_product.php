@@ -7,8 +7,7 @@ if (!isset($_GET['id'])) {
 }
 
 $id = intval($_GET['id']);
-
-$query = "SELECT * FROM products WHERE id = '$id'";
+$query = "SELECT * FROM products WHERE id = $id";
 $result = $koneksi->query($query);
 
 if ($result->num_rows == 0) {
@@ -17,61 +16,76 @@ if ($result->num_rows == 0) {
 }
 
 $product = $result->fetch_assoc();
+$current_image = $product['image_path'];
+$new_image_path = $current_image;
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $name = $_POST['name'];
-    $description = $_POST['description'];
-    $price = $_POST['price'];
-    $stock = $_POST['stock'];
-    $current_image = $product['image_path'];
+function sanitize($value) {
+    global $koneksi;
+    return $koneksi->real_escape_string(trim($value));
+}
 
-    $new_image_path = $current_image;
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = sanitize($_POST['name']);
+    $description = sanitize($_POST['description']);
+    $price = floatval($_POST['price']);
+    $stock = intval($_POST['stock']);
+    $upload_ok = 1;
 
-    if (isset($_FILES['image']) && $_FILES['image']['error'] == UPLOAD_ERR_OK) {
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $target_dir = "uploads/";
         $image_name = basename($_FILES["image"]["name"]);
         $target_file = $target_dir . $image_name;
         $image_file_type = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-        $upload_ok = 1;
 
         $check = getimagesize($_FILES["image"]["tmp_name"]);
         if ($check === false) {
-            echo "<script>alert('File yang diunggah bukan gambar!');</script>";
+            echo "<script>alert('File bukan gambar.');</script>";
             $upload_ok = 0;
         }
 
         if ($_FILES["image"]["size"] > 2000000) {
-            echo "<script>alert('Ukuran file terlalu besar (maks. 2MB)!');</script>";
+            echo "<script>alert('Ukuran gambar melebihi 2MB.');</script>";
             $upload_ok = 0;
         }
 
         if (!in_array($image_file_type, ['jpg', 'jpeg', 'png', 'gif'])) {
-            echo "<script>alert('Hanya file JPG, JPEG, PNG, dan GIF yang diperbolehkan!');</script>";
+            echo "<script>alert('Format gambar harus JPG, JPEG, PNG, atau GIF.');</script>";
             $upload_ok = 0;
         }
 
-        if ($upload_ok && move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
-            $new_image_path = $target_file;
+        if ($_FILES['image']['error'] !== 0) {
+            echo "<script>alert('Error saat upload gambar. Kode: " . $_FILES['image']['error'] . "');</script>";
+            $upload_ok = 0;
+        }
 
-            if ($current_image && file_exists($current_image)) {
-                unlink($current_image);
+        if ($upload_ok) {
+            if (!is_dir($target_dir)) {
+                mkdir($target_dir, 0755, true);
             }
-        } else {
-            echo "<script>alert('Gagal mengunggah gambar baru!');</script>";
+
+            if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
+                $new_image_path = $target_file;
+                if ($current_image && file_exists($current_image)) {
+                    unlink($current_image);
+                }
+            } else {
+                echo "<script>alert('Gagal memindahkan file ke folder upload.');</script>";
+            }
         }
     }
 
-    $update_query = "UPDATE products 
-                     SET name = '$name', 
-                         description = '$description', 
-                         price = '$price', 
-                         stock = '$stock', 
-                         image_path = '$new_image_path' 
-                     WHERE id = '$id'";
-    if ($koneksi->query($update_query)) {
-        echo "<script>alert('Produk berhasil diperbarui!'); window.location.href='admin_dashboard.php';</script>";
+    $update = "UPDATE products SET
+                name = '$name',
+                description = '$description',
+                price = '$price',
+                stock = '$stock',
+                image_path = '$new_image_path'
+                WHERE id = $id";
+
+    if ($koneksi->query($update)) {
+        echo "<script>alert('Produk berhasil diperbarui.'); window.location.href='admin_dashboard.php';</script>";
     } else {
-        echo "<script>alert('Gagal memperbarui produk!');</script>";
+        echo "<script>alert('Gagal memperbarui produk.');</script>";
     }
 }
 ?>
@@ -80,20 +94,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Produk</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f8f9fa; margin: 0; padding: 0; }
-        .container { width: 80%; margin: 20px auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        .container { width: 80%; margin: 20px auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #343a40; }
-        form input, form textarea, form button { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+        input, textarea, button { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
         button { background-color: #007bff; color: white; border: none; cursor: pointer; }
         button:hover { background-color: #0056b3; }
         img { display: block; margin: 10px auto; max-width: 200px; }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 15px;
+            background-color: #6c757d;
+            color: white;
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .back-link:hover {
+            background-color: #5a6268;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <a href="admin_dashboard.php" class="back-link">← Kembali ke Dashboard</a>
         <h2>Edit Produk</h2>
         <form method="POST" enctype="multipart/form-data">
             <label>Nama Produk</label>
@@ -104,8 +130,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <input type="number" name="price" value="<?= $product['price'] ?>" required>
             <label>Stok Produk</label>
             <input type="number" name="stock" value="<?= $product['stock'] ?>" required>
-            <label>Gambar Produk (Biarkan kosong jika tidak ingin mengubah gambar)</label>
+            <label>Gambar Saat Ini</label>
             <img src="<?= htmlspecialchars($product['image_path']) ?>" alt="Gambar Produk">
+            <label>Ganti Gambar (opsional)</label>
             <input type="file" name="image" accept="image/*">
             <button type="submit">Simpan Perubahan</button>
         </form>
