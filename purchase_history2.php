@@ -107,9 +107,3 @@ $result = $koneksi->query($query);
     </div>
 </body>
 </html>
-
-
-
-
-
-

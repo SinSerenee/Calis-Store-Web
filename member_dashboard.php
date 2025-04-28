@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Pastikan hanya member yang dapat mengakses
 if (!isset($_SESSION['role']) || $_SESSION['role'] != 'member') {
     header("Location: login.php");
     exit;
@@ -8,9 +9,11 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] != 'member') {
 
 require 'koneksi.php';
 
+// Ambil semua produk dari database
 $query = "SELECT * FROM products";
 $result = $koneksi->query($query);
 
+// Tambahkan nama pengguna
 $username = isset($_SESSION['username']) ? $_SESSION['username'] : "Member";
 ?>
 
@@ -99,7 +102,7 @@ $username = isset($_SESSION['username']) ? $_SESSION['username'] : "Member";
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 5px;
+            gap: 5px; /* Memberikan jarak antara elemen */
         }
         .buy-button {
             background-color: #28a745;
@@ -126,12 +129,14 @@ $username = isset($_SESSION['username']) ? $_SESSION['username'] : "Member";
     </style>
 </head>
 <body>
+    <!-- Header -->
     <div class="header">
         <h1>Calisthenics Store</h1>
         <p class="welcome">Selamat datang, <?= htmlspecialchars($username) ?>! Anda mendapatkan diskon 10% untuk setiap produk.</p>
         <a href="logout.php" class="logout">Logout</a>
     </div>
 
+    <!-- Container untuk Produk -->
     <div class="container">
         <h2>Daftar Produk</h2>
         <a href="purchase_history2.php" style="display: inline-block; margin: 10px 0; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">Lihat Riwayat Pembelian</a>
