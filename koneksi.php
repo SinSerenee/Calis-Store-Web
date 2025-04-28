@@ -1,8 +1,8 @@
 <?php
 // Konfigurasi RDS
-$host = 'database-sinzu.cgxshlk266oq.us-east-1.rds.amazonaws.com'; // contoh: calis-store-db.abc123xyz.rds.amazonaws.com
-$user = 'admin';
-$pass = 'MyP4ssw0rdku';
+$host = 'localhost'; // contoh: calis-store-db.abc123xyz.rds.amazonaws.com
+$user = 'root';
+$pass = '';
 $db_name = 'calisthenics_store';
 
 // Koneksi ke MySQL Server (tanpa database dulu)
